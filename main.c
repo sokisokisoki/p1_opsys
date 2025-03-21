@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 int next_exp(double lambda)
 {
@@ -37,6 +38,24 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     }
 }
 
+char** assignProcessIDs(int n_processes) {
+    char** ids = calloc(n_processes, sizeof(char*));
+
+    char letter = 'A';
+    int num = 0;
+    int i;
+    for (i = 0; i < n_processes; i++) {
+        ids[i] = calloc(3, sizeof(char));
+        snprintf(ids[i], 3, "%c%c", letter, (char)(num + '0'));
+        num++;
+        if (num == 10) {
+            letter++;
+            num = 0;
+        }
+    }
+    return ids;
+}
+
 int main(int argc, char** argv) {
 
     int n_processes;
@@ -49,5 +68,8 @@ int main(int argc, char** argv) {
     int time_slice_RR;
     handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR);
 
-    
+    char** processes = assignProcessIDs(n_processes);
+    // for (int i = 0; i < n_processes; i++) {
+    //     printf("%s\n", processes[i]);
+    // }
 }
