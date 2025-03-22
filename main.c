@@ -10,30 +10,25 @@ typedef struct {
     int *io_bursts; // Array of I/O burst times
 } Process;
 
-// Function to generate a process
-Process generate_process(char *id, double lambda, double upper_bound) {
-    Process p;
-    snprintf(p.id, sizeof(p.id), "%s", id);
-
+// Function to generate a processes data
+void generate_process(Process *process, double lambda, double upper_bound) {
     // Generate arrival time
-    p.arrival_time = (int)floor(next_exp(lambda, upper_bound));
+    process->arrival_time = (int)floor(next_exp(lambda, upper_bound));
 
     // Generate number of CPU bursts (1 to 32)
-    p.num_bursts = (int)ceil(drand48() * 32);
+    process->num_bursts = (int)ceil(drand48() * 32);
 
     // Allocate memory for CPU and I/O bursts
-    p.cpu_bursts = (int *)malloc(p.num_bursts * sizeof(int));
-    p.io_bursts = (int *)malloc((p.num_bursts - 1) * sizeof(int));
+    process->cpu_bursts = (int *)malloc(process->num_bursts * sizeof(int));
+    process->io_bursts = (int *)malloc((process->num_bursts - 1) * sizeof(int));
 
     // Generate CPU and I/O burst times
-    for (int i = 0; i < p.num_bursts; i++) {
-        p.cpu_bursts[i] = (int)ceil(next_exp(lambda, upper_bound));
-        if (i < p.num_bursts - 1) {
-            p.io_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * 8;
+    for (int i = 0; i < process->num_bursts; i++) {
+        process->cpu_bursts[i] = (int)ceil(next_exp(lambda, upper_bound));
+        if (i < process->num_bursts - 1) {
+            process->io_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * 8;
         }
     }
-
-    return p;
 }
 
 double next_exp(double lambda, double upper_bound) {
@@ -75,22 +70,33 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     }
 }
 
-char** assignProcessIDs(int n_processes) {
-    char** ids = calloc(n_processes, sizeof(char*));
-
+void assignProcessIDs(int n_processes, Process *processes) {
     char letter = 'A';
     int num = 0;
-    int i;
-    for (i = 0; i < n_processes; i++) {
-        ids[i] = calloc(3, sizeof(char));
-        snprintf(ids[i], 3, "%c%c", letter, (char)(num + '0'));
+
+    for (int i = 0; i < n_processes; i++) {
+        // Assign the ID directly to the Process struct
+        snprintf(processes[i].id, sizeof(processes[i].id), "%c%c", letter, (char)(num + '0'));
         num++;
         if (num == 10) {
             letter++;
             num = 0;
         }
     }
-    return ids;
+}
+
+//Function to initialize a list of empty Process structs
+Process* initialize_process_list(int n_processes) {
+    Process* processes = (Process*)malloc(n_processes * sizeof(Process));
+    for (int i = 0; i < n_processes; i++) {
+        // Initialize each Process struct with default values
+        strcpy(processes[i].id, ""); // Empty ID
+        processes[i].arrival_time = 0;
+        processes[i].num_bursts = 0;
+        processes[i].cpu_bursts = NULL;
+        processes[i].io_bursts = NULL;
+    }
+    return processes;
 }
 
 int main(int argc, char** argv) {
@@ -105,7 +111,7 @@ int main(int argc, char** argv) {
     int time_slice_RR;
     handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR);
 
-    char** processes = assignProcessIDs(n_processes);
+    //char** processes = assignProcessIDs(n_processes);
     // for (int i = 0; i < n_processes; i++) {
     //     printf("%s\n", processes[i]);
     // }
