@@ -11,7 +11,7 @@ typedef struct {
 } Process;
 
 // Function to generate a processes data
-void generate_process(Process *process, double lambda, double upper_bound) {
+void generate_process(Process *process, double lambda, double upper_bound, int is_cpu_bound) {
     // Generate arrival time
     process->arrival_time = (int)floor(next_exp(lambda, upper_bound));
 
@@ -24,9 +24,9 @@ void generate_process(Process *process, double lambda, double upper_bound) {
 
     // Generate CPU and I/O burst times
     for (int i = 0; i < process->num_bursts; i++) {
-        process->cpu_bursts[i] = (int)ceil(next_exp(lambda, upper_bound));
+        process->cpu_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * (is_cpu_bound ? 4 : 1);
         if (i < process->num_bursts - 1) {
-            process->io_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * 8;
+            process->io_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * 8 / (is_cpu_bound ? 8: 1);
         }
     }
 }
