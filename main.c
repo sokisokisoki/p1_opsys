@@ -2,16 +2,53 @@
 #include <math.h>
 #include <stdio.h>
 
-int next_exp(double lambda)
-{
-    double r = drand48();
-    double randNum = -log(r)/lambda;
+typedef struct {
+    char id[3]; // Process ID (e.g., "A0\0", "B1\0")
+    int arrival_time; 
+    int num_bursts; // Number of CPU bursts
+    int *cpu_bursts; // Array of CPU burst times
+    int *io_bursts; // Array of I/O burst times
+} Process;
 
-    return randNum;
+// Function to generate a process
+Process generate_process(char *id, double lambda, double upper_bound) {
+    Process p;
+    snprintf(p.id, sizeof(p.id), "%s", id);
+
+    // Generate arrival time
+    p.arrival_time = (int)floor(next_exp(lambda, upper_bound));
+
+    // Generate number of CPU bursts (1 to 32)
+    p.num_bursts = (int)ceil(drand48() * 32);
+
+    // Allocate memory for CPU and I/O bursts
+    p.cpu_bursts = (int *)malloc(p.num_bursts * sizeof(int));
+    p.io_bursts = (int *)malloc((p.num_bursts - 1) * sizeof(int));
+
+    // Generate CPU and I/O burst times
+    for (int i = 0; i < p.num_bursts; i++) {
+        p.cpu_bursts[i] = (int)ceil(next_exp(lambda, upper_bound));
+        if (i < p.num_bursts - 1) {
+            p.io_bursts[i] = (int)ceil(next_exp(lambda, upper_bound)) * 8;
+        }
+    }
+
+    return p;
+}
+
+double next_exp(double lambda, double upper_bound) {
+    while (1) {
+        double r = drand48();
+        double x = -log(r) / lambda;
+        if (x <= upper_bound) {
+            return x;
+        }
+    }
 }
 
 void incorrectInput(char * binaryFile){
-    printf("Inccorect Arguments Given, Expected Input: ./%s n_processes n_cpu_processes random_seed random_lambda random_ceiling context_switch_time alpha_sjf_srt time_slice_RR\n", binaryFile);
+    fprintf(stderr, "Inccorect Arguments Given, Expected Input: ./%s n_processes n_cpu_processes random_seed random_lambda random_ceiling context_switch_time alpha_sjf_srt time_slice_RR\n", binaryFile);
+    exit(EXIT_FAILURE);
 }
 
 void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_processes, int* random_seed, double* random_lambda, int* random_ceiling, int* context_switch_time, double* alpha_sjf_srt, int* time_slice_RR) {
