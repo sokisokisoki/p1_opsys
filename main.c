@@ -1,14 +1,148 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
+#include "queue.h"
+#include "process.h"
 
-typedef struct {
-    char id[3]; // Process ID (e.g., "A0\0", "B1\0")
-    int arrival_time; 
-    int num_bursts; // Number of CPU bursts
-    int *cpu_bursts; // Array of CPU burst times
-    int *io_bursts; // Array of I/O burst times
-} Process;
+// typedef struct {
+//     char id[3]; // Process ID (e.g., "A0\0", "B1\0")
+//     int arrival_time; 
+//     int num_bursts; // Number of CPU bursts
+//     int *cpu_bursts; // Array of CPU burst times
+//     int *io_bursts; // Array of I/O burst times
+// } Process;
+
+
+void print_queue(Queue *q) {
+    printf("[Q");
+    if (is_empty(q)) {
+        printf(" empty");
+    } else {
+        Node *curr = q->front;
+        while (curr != NULL) {
+            printf(" %s", curr->process->id);
+            curr = curr->next;
+        }
+    }
+    printf("]\n");
+}
+
+
+void simulate_fcfs(Process *processes, int n_processes, int tcs) {
+    printf("time 0ms: Simulator started for FCFS [Q empty]\n");
+
+    int current_time = 0;
+    int finished_processes = 0;
+
+    // Track remaining CPU bursts
+    int *remaining_bursts = (int *)malloc(n_processes * sizeof(int));
+    for (int i = 0; i < n_processes; i++) {
+        remaining_bursts[i] = processes[i].num_bursts;
+    }
+
+    // Track burst index per process
+    int *burst_index = (int *)calloc(n_processes, sizeof(int));
+
+    // Track I/O completions
+    int *io_completion_time = (int *)calloc(n_processes, sizeof(int));
+
+    // Ready queue
+    Queue *ready_queue = create_queue();
+
+    // CPU state
+    Process *cpu_process = NULL;
+    int cpu_idle_until = -1;
+    int is_context_switching = 0;
+    int cpu_burst_end_time = -1;
+
+    while (finished_processes < n_processes) {
+        // ---------------- 1. Arrivals ----------------
+        for (int i = 0; i < n_processes; i++) {
+            if (processes[i].arrival_time == current_time) {
+                printf("time %dms: Process %s arrived; added to ready queue ", current_time, processes[i].id);
+                enqueue(ready_queue, &processes[i]);
+                print_queue(ready_queue);
+            }
+        }
+
+        // ---------------- 2. I/O completions ----------------
+        for (int i = 0; i < n_processes; i++) {
+            if (io_completion_time[i] == current_time) {
+                printf("time %dms: Process %s completed I/O; added to ready queue ", current_time, processes[i].id);
+                enqueue(ready_queue, &processes[i]);
+                print_queue(ready_queue);
+                io_completion_time[i] = 0;
+            }
+        }
+
+        // ---------------- 3. Check for CPU burst completion ----------------
+        if (cpu_process != NULL && current_time == cpu_burst_end_time) {
+            int pid = cpu_process - processes;
+            remaining_bursts[pid]--;
+            int bursts_left = remaining_bursts[pid];
+
+            if (bursts_left > 0) {
+                printf("time %dms: Process %s completed a CPU burst; %d bursts to go ", current_time, cpu_process->id, bursts_left);
+                print_queue(ready_queue);
+
+                int io_time = cpu_process->io_bursts[burst_index[pid]];
+                int io_done = current_time + tcs / 2 + io_time;
+
+                printf("time %dms: Process %s switching out of CPU; blocking on I/O until time %dms ", current_time, cpu_process->id, io_done);
+                print_queue(ready_queue);
+
+                io_completion_time[pid] = io_done;
+                burst_index[pid]++;
+            } else {
+                printf("time %dms: Process %s terminated ", current_time, cpu_process->id);
+                print_queue(ready_queue);
+                finished_processes++;
+            }
+
+            cpu_process = NULL;
+            is_context_switching = 1;
+            cpu_idle_until = current_time + tcs / 2;
+        }
+
+        // ---------------- 4. CPU is idle and ready to pick next ----------------
+        if (cpu_process == NULL && !is_empty(ready_queue) && current_time >= cpu_idle_until) {
+            cpu_process = dequeue(ready_queue);
+            int pid = cpu_process - processes;
+            int burst_time = cpu_process->cpu_bursts[burst_index[pid]];
+            int start_time = current_time + tcs / 2;
+
+            printf("time %dms: Process %s started using the CPU for %dms burst ", start_time, cpu_process->id, burst_time);
+            print_queue(ready_queue);
+
+            cpu_burst_end_time = start_time + burst_time;
+            cpu_idle_until = start_time; // CPU won't be idle once switch-in ends
+            is_context_switching = 1;
+        }
+
+        current_time++;
+    }
+
+    printf("time %dms: Simulator ended for FCFS [Q empty]\n", current_time);
+
+    // Cleanup
+    free(remaining_bursts);
+    free(burst_index);
+    free(io_completion_time);
+    free_queue(ready_queue);
+}
+
+
+double next_exp(double lambda, double upper_bound) {
+    while (1) {
+        double r = drand48();
+        double x = -log(r) / lambda;
+        if (x <= upper_bound) {
+            return x;
+        }
+    }
+}
+
 
 // Function to generate a processes data
 void generate_process(Process *process, double lambda, double upper_bound, int is_cpu_bound) {
@@ -31,15 +165,6 @@ void generate_process(Process *process, double lambda, double upper_bound, int i
     }
 }
 
-double next_exp(double lambda, double upper_bound) {
-    while (1) {
-        double r = drand48();
-        double x = -log(r) / lambda;
-        if (x <= upper_bound) {
-            return x;
-        }
-    }
-}
 
 void incorrectInput(char * binaryFile){
     fprintf(stderr, "Inccorect Arguments Given, Expected Input: ./%s n_processes n_cpu_processes random_seed random_lambda random_ceiling context_switch_time alpha_sjf_srt time_slice_RR\n", binaryFile);
@@ -111,7 +236,17 @@ int main(int argc, char** argv) {
     int time_slice_RR;
     handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR);
 
-    //char** processes = assignProcessIDs(n_processes);
+    // char** processIds = assignProcessIDs(n_processes);
+
+    Process* processes = initialize_process_list(n_processes);
+    assignProcessIDs(n_processes, processes);
+
+    for (int i  = 0; i <  n_processes; i++) {
+        generate_process(&processes[i], random_lambda, random_ceiling, (i < n_cpu_processes ? 1 : 0));
+    }
+
+    simulate_fcfs(processes, n_processes, context_switch_time);
+    
     // for (int i = 0; i < n_processes; i++) {
     //     printf("%s\n", processes[i]);
     // }
