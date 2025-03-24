@@ -3,6 +3,7 @@
 
 typedef struct {
     char id[3]; // Process ID (e.g., "A0\0", "B1\0")
+    int is_cpu_bound;
     int arrival_time; 
     int num_bursts; // Number of CPU bursts
     int *cpu_bursts; // Array of CPU burst times
