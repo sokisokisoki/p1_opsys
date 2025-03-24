@@ -278,9 +278,9 @@ int main(int argc, char** argv) {
         generate_process(&processes[i], random_lambda, random_ceiling, (i < n_cpu_processes ? 1 : 0));
     }
 
-    print_process_gen_details(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
+    print_process_conditions(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
     print_process_details(n_processes, processes);
-    print_sim_gen_details(context_switch_time, alpha_sjf_srt, time_slice_RR);
+    print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
 
     simulate_fcfs(processes, n_processes, context_switch_time);
     
