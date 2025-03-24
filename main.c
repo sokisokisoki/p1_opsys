@@ -35,62 +35,74 @@ void simulate_fcfs(Process *processes, int n_processes, int tcs) {
     int current_time = 0;
     int finished_processes = 0;
 
-    // Track remaining CPU bursts
+    // track remaining CPU bursts
     int *remaining_bursts = (int *)malloc(n_processes * sizeof(int));
     for (int i = 0; i < n_processes; i++) {
         remaining_bursts[i] = processes[i].num_bursts;
     }
 
-    // Track burst index per process
+    // track burst index per process
     int *burst_index = (int *)calloc(n_processes, sizeof(int));
 
-    // Track I/O completions
+    // track IO completions
     int *io_completion_time = (int *)calloc(n_processes, sizeof(int));
 
-    // Ready queue
+    // ready queue
     Queue *ready_queue = create_queue();
 
-    // CPU state
+    // cpu state
     Process *cpu_process = NULL;
     int cpu_idle_until = -1;
     int is_context_switching = 0;
     int cpu_burst_end_time = -1;
 
     while (finished_processes < n_processes) {
-        // ---------------- 1. Arrivals ----------------
+        // arrivals
         for (int i = 0; i < n_processes; i++) {
             if (processes[i].arrival_time == current_time) {
-                printf("time %dms: Process %s arrived; added to ready queue ", current_time, processes[i].id);
+                if (current_time < 10000) {
+                    printf("time %dms: Process %s arrived; added to ready queue ", current_time, processes[i].id);
+                }
                 enqueue(ready_queue, &processes[i]);
-                print_queue(ready_queue);
+                if (current_time < 10000) {
+                    print_queue(ready_queue);
+                }
             }
         }
 
-        // ---------------- 2. I/O completions ----------------
+        // IO burst completions
         for (int i = 0; i < n_processes; i++) {
-            if (io_completion_time[i] == current_time) {
-                printf("time %dms: Process %s completed I/O; added to ready queue ", current_time, processes[i].id);
+            if (io_completion_time[i] != 0 && io_completion_time[i] == current_time) {
+                if (current_time < 10000) {
+                    printf("time %dms: Process %s completed I/O; added to ready queue ", current_time, processes[i].id);
+                }
                 enqueue(ready_queue, &processes[i]);
-                print_queue(ready_queue);
+                if (current_time < 10000) {
+                    print_queue(ready_queue);
+                }
                 io_completion_time[i] = 0;
             }
         }
 
-        // ---------------- 3. Check for CPU burst completion ----------------
+        // cpu burst completions
         if (cpu_process != NULL && current_time == cpu_burst_end_time) {
             int pid = cpu_process - processes;
             remaining_bursts[pid]--;
             int bursts_left = remaining_bursts[pid];
 
             if (bursts_left > 0) {
-                printf("time %dms: Process %s completed a CPU burst; %d bursts to go ", current_time, cpu_process->id, bursts_left);
-                print_queue(ready_queue);
+                if (current_time < 10000) {
+                    printf("time %dms: Process %s completed a CPU burst; %d bursts to go ", current_time, cpu_process->id, bursts_left);
+                    print_queue(ready_queue);
+                }
 
                 int io_time = cpu_process->io_bursts[burst_index[pid]];
                 int io_done = current_time + tcs / 2 + io_time;
 
-                printf("time %dms: Process %s switching out of CPU; blocking on I/O until time %dms ", current_time, cpu_process->id, io_done);
-                print_queue(ready_queue);
+                if (current_time < 10000) {
+                    printf("time %dms: Process %s switching out of CPU; blocking on I/O until time %dms ", current_time, cpu_process->id, io_done);
+                    print_queue(ready_queue);
+                }
 
                 io_completion_time[pid] = io_done;
                 burst_index[pid]++;
@@ -105,15 +117,17 @@ void simulate_fcfs(Process *processes, int n_processes, int tcs) {
             cpu_idle_until = current_time + tcs / 2;
         }
 
-        // ---------------- 4. CPU is idle and ready to pick next ----------------
+        // start next cpu burst
         if (cpu_process == NULL && !is_empty(ready_queue) && current_time >= cpu_idle_until) {
             cpu_process = dequeue(ready_queue);
             int pid = cpu_process - processes;
             int burst_time = cpu_process->cpu_bursts[burst_index[pid]];
             int start_time = current_time + tcs / 2;
-
-            printf("time %dms: Process %s started using the CPU for %dms burst ", start_time, cpu_process->id, burst_time);
-            print_queue(ready_queue);
+            
+            if (current_time < 10000) {
+                printf("time %dms: Process %s started using the CPU for %dms burst ", start_time, cpu_process->id, burst_time);
+                print_queue(ready_queue);
+            }
 
             cpu_burst_end_time = start_time + burst_time;
             cpu_idle_until = start_time; // CPU won't be idle once switch-in ends
@@ -123,7 +137,7 @@ void simulate_fcfs(Process *processes, int n_processes, int tcs) {
         current_time++;
     }
 
-    printf("time %dms: Simulator ended for FCFS [Q empty]\n", current_time);
+    printf("time %dms: Simulator ended for FCFS [Q empty]\n", current_time+1);
 
     // Cleanup
     free(remaining_bursts);
