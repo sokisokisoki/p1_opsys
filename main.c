@@ -230,7 +230,7 @@ Process* initialize_process_list(int n_processes) {
 }
 
 
-void print_process_gen_details(int n, int n_cpu, int seed, double lambda, int bound) {
+void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bound) {
     printf("<<< -- process set (n=%d) with %d CPU-bound process\n", n, n_cpu);
     printf("<<< -- seed=%d; lambda=%.6f; bound=%d\n\n", seed, lambda, bound);
 }
@@ -250,7 +250,7 @@ void print_process_details(int n_processes, Process* processes) {
     }
 }
 
-void print_sim_gen_details(int t_cs, double alpha, int t_slice) {
+void print_sim_conditions(int t_cs, double alpha, int t_slice) {
     printf("<<< PROJECT SIMULATIONS\n");
     printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms\n", t_cs, alpha, t_slice);
 }
