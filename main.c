@@ -1,18 +1,26 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
+#include "queue.h"
+#include "process.h"
 
-typedef struct {
-    char id[3]; // Process ID (e.g., "A0\0", "B1\0")
-    int arrival_time; 
-    int num_bursts; // Number of CPU bursts
-    int *cpu_bursts; // Array of CPU burst times
-    int *io_bursts; // Array of I/O burst times
-} Process;
+
+double next_exp(double lambda, double upper_bound) {
+    while (1) {
+        double r = drand48();
+        double x = -log(r) / lambda;
+        if (x <= upper_bound) {
+            return x;
+        }
+    }
+}
+
 
 // Function to generate a processes data
 void generate_process(Process *process, double lambda, double upper_bound, int is_cpu_bound) {
     // Generate arrival time
+    process->is_cpu_bound = is_cpu_bound;
     process->arrival_time = (int)floor(next_exp(lambda, upper_bound));
 
     // Generate number of CPU bursts (1 to 32)
@@ -31,20 +39,12 @@ void generate_process(Process *process, double lambda, double upper_bound, int i
     }
 }
 
-double next_exp(double lambda, double upper_bound) {
-    while (1) {
-        double r = drand48();
-        double x = -log(r) / lambda;
-        if (x <= upper_bound) {
-            return x;
-        }
-    }
-}
 
 void incorrectInput(char * binaryFile){
     fprintf(stderr, "Inccorect Arguments Given, Expected Input: ./%s n_processes n_cpu_processes random_seed random_lambda random_ceiling context_switch_time alpha_sjf_srt time_slice_RR\n", binaryFile);
     exit(EXIT_FAILURE);
 }
+
 
 void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_processes, int* random_seed, double* random_lambda, int* random_ceiling, int* context_switch_time, double* alpha_sjf_srt, int* time_slice_RR) {
     // Check if the correct number of arguments is provided
@@ -70,6 +70,7 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     }
 }
 
+
 void assignProcessIDs(int n_processes, Process *processes) {
     char letter = 'A';
     int num = 0;
@@ -85,12 +86,14 @@ void assignProcessIDs(int n_processes, Process *processes) {
     }
 }
 
+
 //Function to initialize a list of empty Process structs
 Process* initialize_process_list(int n_processes) {
     Process* processes = (Process*)malloc(n_processes * sizeof(Process));
     for (int i = 0; i < n_processes; i++) {
         // Initialize each Process struct with default values
         strcpy(processes[i].id, ""); // Empty ID
+        processes[i].is_cpu_bound = 0;
         processes[i].arrival_time = 0;
         processes[i].num_bursts = 0;
         processes[i].cpu_bursts = NULL;
@@ -99,8 +102,34 @@ Process* initialize_process_list(int n_processes) {
     return processes;
 }
 
-int main(int argc, char** argv) {
 
+void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bound) {
+    printf("<<< -- process set (n=%d) with %d CPU-bound process\n", n, n_cpu);
+    printf("<<< -- seed=%d; lambda=%.6f; bound=%d\n\n", seed, lambda, bound);
+}
+
+
+void print_process_details(int n_processes, Process* processes) {
+    for (int i = 0; i < n_processes; i++) {
+        printf("%s-bound process %s: arrival time %dms; %d CPU bursts:\n", 
+            (processes[i].is_cpu_bound ? "CPU" : "IO"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
+        for (int j = 0; j < processes[i].num_bursts; j++) {
+            if (j != processes[i].num_bursts - 1) {
+                printf("==> CPU burst %dms ==> I/O burst %dms\n", processes[i].cpu_bursts[j], processes[i].io_bursts[j]);
+            } else {
+                printf("==> CPU burst %dms\n\n", processes[i].cpu_bursts[j]);
+            }
+        }
+    }
+}
+
+void print_sim_conditions(int t_cs, double alpha, int t_slice) {
+    printf("<<< PROJECT SIMULATIONS\n");
+    printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms\n", t_cs, alpha, t_slice);
+}
+
+int main(int argc, char** argv) {
+    setvbuf( stdout, NULL, _IONBF, 0 );
     int n_processes;
     int n_cpu_processes;
     int random_seed;
@@ -111,8 +140,20 @@ int main(int argc, char** argv) {
     int time_slice_RR;
     handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR);
 
-    //char** processes = assignProcessIDs(n_processes);
-    // for (int i = 0; i < n_processes; i++) {
-    //     printf("%s\n", processes[i]);
-    // }
+    // char** processIds = assignProcessIDs(n_processes);
+
+    Process* processes = initialize_process_list(n_processes);
+    assignProcessIDs(n_processes, processes);
+
+    srand48(random_seed);
+
+    for (int i  = 0; i <  n_processes; i++) {
+        generate_process(&processes[i], random_lambda, random_ceiling, (i < n_cpu_processes ? 1 : 0));
+    }
+
+    print_process_conditions(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
+    print_process_details(n_processes, processes);
+    print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
+    
+    // simulations:
 }
