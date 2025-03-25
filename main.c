@@ -4,6 +4,7 @@
 #include <string.h>
 #include "queue.h"
 #include "process.h"
+#include "sim_rr.h"
 #include "sim_fcfs.h"
 
 double next_exp(double lambda, double upper_bound) {
@@ -112,7 +113,7 @@ void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bou
 void print_process_details(int n_processes, Process* processes) {
     for (int i = 0; i < n_processes; i++) {
         printf("%s-bound process %s: arrival time %dms; %d CPU bursts:\n", 
-            (processes[i].is_cpu_bound ? "CPU" : "IO"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
+            (processes[i].is_cpu_bound ? "CPU" : "I/O"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
         for (int j = 0; j < processes[i].num_bursts; j++) {
             if (j != processes[i].num_bursts - 1) {
                 printf("==> CPU burst %dms ==> I/O burst %dms\n", processes[i].cpu_bursts[j], processes[i].io_bursts[j]);
@@ -123,10 +124,12 @@ void print_process_details(int n_processes, Process* processes) {
     }
 }
 
+
 void print_sim_conditions(int t_cs, double alpha, int t_slice) {
     printf("<<< PROJECT SIMULATIONS\n");
     printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms\n", t_cs, alpha, t_slice);
 }
+
 
 int main(int argc, char** argv) {
     setvbuf( stdout, NULL, _IONBF, 0 );
@@ -154,7 +157,8 @@ int main(int argc, char** argv) {
     print_process_conditions(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
     print_process_details(n_processes, processes);
     print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
-    
+
     // simulations:
     simulate_fcfs(processes, n_processes, context_switch_time);
+    simulate_rr(processes, n_processes, context_switch_time, time_slice_RR);
 }

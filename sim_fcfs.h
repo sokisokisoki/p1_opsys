@@ -116,7 +116,7 @@ void simulate_fcfs(Process *processes, int n_processes, int tcs) {
         current_time++;
     }
 
-    printf("time %dms: Simulator ended for FCFS [Q empty]\n", current_time+1);
+    printf("time %dms: Simulator ended for FCFS [Q empty]\n\n", current_time+1);
 
     // Cleanup
     free(remaining_bursts);
