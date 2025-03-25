@@ -8,6 +8,7 @@ typedef struct {
     int num_bursts; // Number of CPU bursts
     int *cpu_bursts; // Array of CPU burst times
     int *io_bursts; // Array of I/O burst times
+    int index;
 } Process;
 
 #endif // PROCESS_H
