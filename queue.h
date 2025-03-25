@@ -90,6 +90,20 @@ int queue_size(Queue *queue) {
     return queue->size;
 }
 
+void print_queue(Queue *q) {
+    printf("[Q");
+    if (is_empty(q)) {
+        printf(" empty");
+    } else {
+        Node *curr = q->front;
+        while (curr != NULL) {
+            printf(" %s", curr->process->id);
+            curr = curr->next;
+        }
+    }
+    printf("]\n");
+}
+
 // Free the queue and all its nodes
 void free_queue(Queue *queue) {
     while (!is_empty(queue)) {
