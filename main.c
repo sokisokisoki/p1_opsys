@@ -154,10 +154,6 @@ int main(int argc, char** argv) {
     print_process_conditions(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
     print_process_details(n_processes, processes);
     print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
-
-    simulate_fcfs(processes, n_processes, context_switch_time);
     
-    // for (int i = 0; i < n_processes; i++) {
-    //     printf("%s\n", processes[i]);
-    // }
+    // simulations:
 }
