@@ -113,7 +113,7 @@ void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bou
 void print_process_details(int n_processes, Process* processes) {
     for (int i = 0; i < n_processes; i++) {
         printf("%s-bound process %s: arrival time %dms; %d CPU bursts:\n", 
-            (processes[i].is_cpu_bound ? "CPU" : "IO"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
+            (processes[i].is_cpu_bound ? "CPU" : "I/O"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
         for (int j = 0; j < processes[i].num_bursts; j++) {
             if (j != processes[i].num_bursts - 1) {
                 printf("==> CPU burst %dms ==> I/O burst %dms\n", processes[i].cpu_bursts[j], processes[i].io_bursts[j]);
