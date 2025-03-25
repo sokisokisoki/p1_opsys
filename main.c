@@ -4,12 +4,8 @@
 #include <string.h>
 #include "queue.h"
 #include "process.h"
-<<<<<<< HEAD
 #include "sim_rr.h"
-
-=======
 #include "sim_fcfs.h"
->>>>>>> 55d557f (moved fcfs algo to .h file)
 
 double next_exp(double lambda, double upper_bound) {
     while (1) {
@@ -137,8 +133,5 @@ int main(int argc, char** argv) {
 
     // simulations:
     simulate_fcfs(processes, n_processes, context_switch_time);
-<<<<<<< HEAD
     simulate_rr(processes, n_processes, context_switch_time, time_slice_RR);
-=======
->>>>>>> 55d557f (moved fcfs algo to .h file)
 }
