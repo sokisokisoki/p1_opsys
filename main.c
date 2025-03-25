@@ -4,7 +4,7 @@
 #include <string.h>
 #include "queue.h"
 #include "process.h"
-
+#include "sim_fcfs.h"
 
 double next_exp(double lambda, double upper_bound) {
     while (1) {
@@ -156,4 +156,5 @@ int main(int argc, char** argv) {
     print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
     
     // simulations:
+    simulate_fcfs(processes, n_processes, context_switch_time);
 }
