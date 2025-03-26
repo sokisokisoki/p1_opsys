@@ -180,7 +180,7 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
         current_time++;
     }
 
-    printf("time %dms: Simulator ended for SJF [Q empty]\n", current_time+1);
+    printf("time %dms: Simulator ended for SJF [Q empty]\n\n", current_time+1);
 
     // Cleanup
     free(remaining_bursts);
