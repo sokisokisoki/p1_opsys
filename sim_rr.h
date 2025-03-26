@@ -24,7 +24,7 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
 
     Process *cpu_process = NULL;
     int cpu_burst_end_time = -1;
-    int preempt_time = -1;
+    // int preempt_time = -1;
     int cpu_idle_until = -1;
 
     // stat tracking

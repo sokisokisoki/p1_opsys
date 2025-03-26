@@ -107,7 +107,7 @@ Process* initialize_process_list(int n_processes) {
 
 
 void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bound) {
-    printf("<<< -- process set (n=%d) with %d CPU-bound process\n", n, n_cpu);
+    printf("<<< -- process set (n=%d) with %d CPU-bound process%s\n", n, n_cpu, n_cpu > 1 ? "es" : "");
     printf("<<< -- seed=%d; lambda=%.6f; bound=%d\n\n", seed, lambda, bound);
 }
 
@@ -130,6 +130,30 @@ void print_process_details(int n_processes, Process* processes) {
 void print_sim_conditions(int t_cs, double alpha, int t_slice) {
     printf("<<< PROJECT SIMULATIONS\n");
     printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms\n", t_cs, alpha, t_slice);
+}
+
+
+void print_sim_stats(int n, int n_cpu) {
+    FILE *f = fopen("simout.txt", "a");
+    fprintf(f, "-- number of processes: %d\n", n);
+    fprintf(f, "-- number of CPU-bound processes: %d\n", n_cpu);
+    fprintf(f, "-- number of I/O-bound processes: %d\n", n - n_cpu);
+    fprintf(f, "-- CPU-bound average CPU burst time: %.3d ms\n", 0);
+    fprintf(f, "-- I/O-bound average CPU burst time: %.3d\n", 0);
+    fprintf(f, "-- overall average CPU burst time: %.3d\n", 0);
+    fprintf(f, "-- CPU-bound average I/O burst time: %.3d\n", 0);
+    fprintf(f, "-- I/O-bound average I/O burst time: %.3d\n", 0);
+    fprintf(f, "-- overall average I/O burst time: %.3d\n\n", 0);
+    fclose(f);
+
+// -- number of CPU-bound processes: 1
+// -- number of I/O-bound processes: 2
+// -- CPU-bound average CPU burst time: 1600.640 ms
+// -- I/O-bound average CPU burst time: 247.300 ms
+// -- overall average CPU burst time: 999.156 ms
+// -- CPU-bound average I/O burst time: 419.084 ms
+// -- I/O-bound average I/O burst time: 3277.778 ms
+// -- overall average I/O burst time: 1644.239 ms
 }
 
 
@@ -160,9 +184,13 @@ int main(int argc, char** argv) {
     print_process_details(n_processes, processes);
     print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
 
+    print_sim_stats(n_processes, n_cpu_processes);
+
     // simulations:
     simulate_fcfs(processes, n_processes, context_switch_time);
     simulate_sjf(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
     simulate_srt(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
     simulate_rr(processes, n_processes, context_switch_time, time_slice_RR);
+
+
 }
