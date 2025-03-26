@@ -6,6 +6,8 @@
 #include "process.h"
 #include "sim_rr.h"
 #include "sim_fcfs.h"
+#include "sim_sjf.h"
+#include "sim_srt.h"
 
 double next_exp(double lambda, double upper_bound) {
     while (1) {
@@ -160,5 +162,7 @@ int main(int argc, char** argv) {
 
     // simulations:
     simulate_fcfs(processes, n_processes, context_switch_time);
+    simulate_sjf(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
+    simulate_srt(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
     simulate_rr(processes, n_processes, context_switch_time, time_slice_RR);
 }

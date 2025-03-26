@@ -189,10 +189,10 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
     }
 
     // end of simulation
-    printf("time %dms: Simulator ended for RR [Q empty]\n\n", current_time+1);
+    printf("time %dms: Simulator ended for RR [Q empty]\n", current_time+1);
 
     // output stats
-    FILE *f = fopen("emp/simout.txt", "a");
+    FILE *f = fopen("simout.txt", "a");
 
     int cb_count = 0, io_count = 0;
     float cb_wait = 0, io_wait = 0, cb_turn = 0, io_turn = 0;

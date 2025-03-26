@@ -9,9 +9,9 @@
 #include "process.h"
 
 // Helper function to calculate tau (estimated burst time)
-static int calculate_tau(double alpha, int previous_tau, int actual_burst) {
-    return (int)ceil((alpha * actual_burst) + ((1 - alpha) * previous_tau));
-}
+// static int calculate_tau(double alpha, int previous_tau, int actual_burst) {
+//     return (int)ceil((alpha * actual_burst) + ((1 - alpha) * previous_tau));
+// }
 
 void simulate_srt(Process *processes, int n_processes, int tcs, double alpha, double lambda) {
     printf("time 0ms: Simulator started for SRT [Q empty]\n");
@@ -277,20 +277,23 @@ void simulate_srt(Process *processes, int n_processes, int tcs, double alpha, do
     io_bound_avg_wait = io_bound_bursts > 0 ? ceil((io_bound_avg_wait / io_bound_bursts) * 1000) / 1000 : 0;
     overall_avg_wait = (cpu_bound_bursts + io_bound_bursts) > 0 ? ceil(((cpu_bound_avg_wait * cpu_bound_bursts + io_bound_avg_wait * io_bound_bursts) / (cpu_bound_bursts + io_bound_bursts)) * 1000) / 1000 : 0;
 
-    printf("Algorithm SRT\n");
-    printf("-- CPU utilization: %.3f%%\n", cpu_utilization);
-    printf("-- CPU-bound average wait time: %.3f ms\n", cpu_bound_avg_wait);
-    printf("-- I/O-bound average wait time: %.3f ms\n", io_bound_avg_wait);
-    printf("-- overall average wait time: %.3f ms\n", overall_avg_wait);
-    printf("-- CPU-bound average turnaround time: %.3f ms\n", cpu_bound_avg_turnaround);
-    printf("-- I/O-bound average turnaround time: %.3f ms\n", io_bound_avg_turnaround);
-    printf("-- overall average turnaround time: %.3f ms\n", overall_avg_turnaround);
-    printf("-- CPU-bound number of context switches: %d\n", cpu_bound_context_switches);
-    printf("-- I/O-bound number of context switches: %d\n", io_bound_context_switches);
-    printf("-- overall number of context switches: %d\n", total_context_switches);
-    printf("-- CPU-bound number of preemptions: %d\n", cpu_bound_preemp);
-    printf("-- I/O-bound number of preemptions: %d\n", io_bound_preemp);
-    printf("-- overall number of preemptions: %d\n", total_preemptions);
+    FILE *f = fopen("simout.txt", "a");
+    fprintf(f, "Algorithm SRT\n");
+    fprintf(f, "-- CPU utilization: %.3f%%\n", cpu_utilization);
+    fprintf(f, "-- CPU-bound average wait time: %.3f ms\n", cpu_bound_avg_wait);
+    fprintf(f, "-- I/O-bound average wait time: %.3f ms\n", io_bound_avg_wait);
+    fprintf(f, "-- overall average wait time: %.3f ms\n", overall_avg_wait);
+    fprintf(f, "-- CPU-bound average turnaround time: %.3f ms\n", cpu_bound_avg_turnaround);
+    fprintf(f, "-- I/O-bound average turnaround time: %.3f ms\n", io_bound_avg_turnaround);
+    fprintf(f, "-- overall average turnaround time: %.3f ms\n", overall_avg_turnaround);
+    fprintf(f, "-- CPU-bound number of context switches: %d\n", cpu_bound_context_switches);
+    fprintf(f, "-- I/O-bound number of context switches: %d\n", io_bound_context_switches);
+    fprintf(f, "-- overall number of context switches: %d\n", total_context_switches);
+    fprintf(f, "-- CPU-bound number of preemptions: %d\n", cpu_bound_preemp);
+    fprintf(f, "-- I/O-bound number of preemptions: %d\n", io_bound_preemp);
+    fprintf(f, "-- overall number of preemptions: %d\n\n", total_preemptions);
+
+    fclose(f);
 
     // Cleanup
     free(remaining_bursts);
@@ -302,8 +305,6 @@ void simulate_srt(Process *processes, int n_processes, int tcs, double alpha, do
     free_queue(ready_queue);
     free(total_turnaround_time);
     free(total_wait_time);
-
-
 }
 
 #endif // SIM_SRT_H
