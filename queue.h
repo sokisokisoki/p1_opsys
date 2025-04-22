@@ -60,6 +60,27 @@ void enqueue(Queue *queue, Process *process) {
     queue->size++;
 }
 
+// Add a Process to the front of the queue
+void enqueue_front(Queue *queue, Process *process) {
+    Node *new_node = (Node*)malloc(sizeof(Node));
+    if (new_node == NULL) {
+        fprintf(stderr, "Memory allocation failed for front node\n");
+        exit(EXIT_FAILURE);
+    }
+
+    new_node->process = process;
+    new_node->next = queue->front;
+    queue->front = new_node;
+
+    // If queue is empty, update rear too
+    if (queue->rear == NULL) {
+        queue->rear = new_node;
+    }
+
+    queue->size++;
+}
+
+
 // Remove and return the Process at the front of the queue
 Process* dequeue(Queue *queue) {
     if (is_empty(queue)) {

@@ -1,4 +1,6 @@
 *.out
 *.txt
+*.vscode
+*.DS_Store
 /emp
 /thero
