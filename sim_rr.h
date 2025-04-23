@@ -8,7 +8,7 @@
 #include "queue.h"
 #include "process.h"
 
-void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
+void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice, int rr_alt) {
     printf("time 0ms: Simulator started for RR [Q empty]\n");
 
     int current_time = 0;
@@ -23,6 +23,7 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
     Queue *ready_queue = create_queue();
 
     Process *cpu_process = NULL;
+    Process *preempted_process = NULL;
     int cpu_burst_end_time = -1;
     // int preempt_time = -1;
     int cpu_idle_until = -1;
@@ -129,14 +130,18 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
                         printf("time %dms: Time slice expired; preempting process %s with %dms remaining ", current_time, cpu_process->id, remaining_burst_time[pid]);
                         print_queue(ready_queue);
                     }
-                    enqueue(ready_queue, cpu_process);
+                    if (rr_alt) {
+                        preempted_process = cpu_process;
+                    } else {
+                        enqueue(ready_queue, cpu_process);
+                    }
                     total_preemptions++;
                     if (cpu_process->is_cpu_bound) cb_preemptions++;
                     else io_preemptions++;
                 }
             }
 
-            if (preemption) {
+            if ((rr_alt && preempted_process) || preemption) {
                 cpu_process = NULL;
                 cpu_idle_until = current_time + tcs / 2;
             } else {
@@ -151,6 +156,10 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice) {
         // starting new cpu burst
         if (cpu_process == NULL && !is_empty(ready_queue) && current_time >= cpu_idle_until && delay_start_time == -1) {
             cpu_process = dequeue(ready_queue);
+            if (rr_alt && preempted_process) {
+                enqueue_front(ready_queue, preempted_process);
+                preempted_process = NULL;
+            }
             int pid = cpu_process - processes;
             int slice = (remaining_burst_time[pid] > t_slice) ? t_slice : remaining_burst_time[pid];
             delay_slice = slice;

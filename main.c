@@ -49,9 +49,9 @@ void incorrectInput(char * binaryFile){
 }
 
 
-void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_processes, int* random_seed, double* random_lambda, int* random_ceiling, int* context_switch_time, double* alpha_sjf_srt, int* time_slice_RR) {
+void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_processes, int* random_seed, double* random_lambda, int* random_ceiling, int* context_switch_time, double* alpha_sjf_srt, int* time_slice_RR, int* rr_alt) {
     // Check if the correct number of arguments is provided
-    if (argc != 9) {
+    if (argc < 9 || argc > 10) {
         incorrectInput(argv[0]);
     }
 
@@ -64,6 +64,7 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     *context_switch_time = atoi(argv[6]);
     *alpha_sjf_srt = atof(argv[7]);
     *time_slice_RR = atoi(argv[8]);
+    *rr_alt = strcmp(argv[9], "RR_ALT") == 0;
 
     // Validate argument constraints
     if (*n_processes <= 0 || *n_cpu_processes < 0 || *n_cpu_processes > *n_processes || *random_seed < 0 ||
@@ -167,7 +168,8 @@ int main(int argc, char** argv) {
     int context_switch_time;
     double alpha_sjf_srt;
     int time_slice_RR;
-    handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR);
+    int rr_alt;
+    handleArguments(argc, argv, &n_processes, &n_cpu_processes, &random_seed, &random_lambda, &random_ceiling, &context_switch_time, &alpha_sjf_srt, &time_slice_RR, &rr_alt);
 
     // char** processIds = assignProcessIDs(n_processes);
 
@@ -190,7 +192,7 @@ int main(int argc, char** argv) {
     simulate_fcfs(processes, n_processes, context_switch_time);
     simulate_sjf(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
     simulate_srt(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
-    simulate_rr(processes, n_processes, context_switch_time, time_slice_RR);
+    simulate_rr(processes, n_processes, context_switch_time, time_slice_RR, rr_alt);
 
 
 }
