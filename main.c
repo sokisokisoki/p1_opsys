@@ -69,7 +69,7 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     // Validate argument constraints
     if (*n_processes <= 0 || *n_cpu_processes < 0 || *n_cpu_processes > *n_processes || *random_seed < 0 ||
         *random_lambda <= 0 || *random_ceiling <= 0 || *context_switch_time <= 0 || *context_switch_time % 2 != 0 ||
-        *alpha_sjf_srt < 0 || *alpha_sjf_srt > 1 || *time_slice_RR <= 0) {
+        *alpha_sjf_srt < -1 || *alpha_sjf_srt > 1 || *time_slice_RR <= 0) {
         incorrectInput(argv[0]);
     }
 }
