@@ -142,7 +142,7 @@ void simulate_fcfs(Process *processes, int n_processes, int tcs) {
     fprintf(f, "-- overall number of context switches: %d\n", total_context_switches);
     fprintf(f, "-- CPU-bound number of preemptions: 0\n");
     fprintf(f, "-- I/O-bound number of preemptions: 0\n");
-    fprintf(f, "-- overall number of preemptions: %d\n\n", total_bursts);
+    fprintf(f, "-- overall number of preemptions: 0\n\n");
 
     fclose(f);
 

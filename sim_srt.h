@@ -185,7 +185,7 @@ void simulate_srt_actual(Process *processes, int n_processes, int tcs, double la
     Process *cpu_process = NULL;
     int cpu_idle_until = -1;
     int cpu_burst_end_time = -1;
-    int preemption_occurred = 0;
+    //int preemption_occurred = 0;
 
     while (finished_processes < n_processes) {
         // Process arrivals
@@ -221,7 +221,7 @@ void simulate_srt_actual(Process *processes, int n_processes, int tcs, double la
                     
                         cpu_idle_until = current_time + tcs / 2;
                         cpu_process = NULL;
-                        preemption_occurred = 1;
+                        //preemption_occurred = 1;
                     }
                     else {
                         if (current_time < 10000) {
@@ -252,49 +252,61 @@ void simulate_srt_actual(Process *processes, int n_processes, int tcs, double la
         // IO burst completions
         for (int i = 0; i < n_processes; i++) {
             if (io_completion_time[i] != 0 && io_completion_time[i] == current_time) {
-                int pid = 0;
-                int burst_time = 0;
-                if (cpu_process != NULL){
-                    pid = cpu_process->index;
-                    burst_time = cpu_process->cpu_bursts[burst_index[pid]];
-                }
-
-                      
-                int elapsed = (current_time - cpu_idle_until);   
-                remaining_time[i] = processes[i].cpu_bursts[burst_index[processes[i].index]];
-                remaining_time[pid] = burst_time - elapsed;
-                if (cpu_process != NULL && remaining_time[i] < remaining_time[pid]) {
-                    // Preemption needed
-                    if (current_time < 10000) {
-                        printf("time %dms: Process %s completed I/O; preempting %s ",
-                              current_time, processes[i].id, cpu_process->id);
-                    }
-                    enqueue_sorted_by_remaining_time(ready_queue, &processes[i], remaining_time);
-                    if (current_time < 10000){
-                        print_queue(ready_queue);
-                    }
-                    
-                    was_preempted[cpu_process->index] = 1;
-                    if (!processes[i].is_cpu_bound){
-                        cpu_bound_preemp++;
-                    }
-                    else{
-                        io_bound_preemp++;
-                    }
-                    total_preemptions++;
-                    
-                    remaining_time[cpu_process->index] = cpu_burst_end_time - current_time;
-                    enqueue_sorted_by_remaining_time(ready_queue, cpu_process, remaining_time);
-                    
-                    cpu_idle_until = current_time + tcs / 2;
-                    cpu_process = NULL;
-                    preemption_occurred = 1;
-                }
                 
-                if (!preemption_occurred) {
+                // Always add the process to the ready queue first
+                remaining_time[i] = processes[i].cpu_bursts[burst_index[i]];
+                
+                // Check if preemption is needed
+                if (cpu_process != NULL) {
+                    int pid = cpu_process->index;
+                    //int elapsed = current_time - cpu_idle_until;
+                    int remaining = cpu_burst_end_time - current_time;
+                    
+                    if (remaining_time[i] < remaining) {
+                        // Preemption needed
+                        if (current_time < 10000) {
+                            printf("time %dms: Process %s completed I/O; preempting %s ",
+                                current_time, processes[i].id, cpu_process->id);
+                        }
+                        
+                        // Add the I/O-completed process to the ready queue
+                        enqueue_sorted_by_remaining_time(ready_queue, &processes[i], remaining_time);
+                        if (current_time < 10000) {
+                            print_queue(ready_queue);
+                        }
+                        
+                        // Mark the current process as preempted and add it back to the queue
+                        was_preempted[pid] = 1;
+                        remaining_time[pid] = remaining;
+                        enqueue_sorted_by_remaining_time(ready_queue, cpu_process, remaining_time);
+                        
+                        // Update preemption statistics
+                        if (!processes[i].is_cpu_bound) {
+                            cpu_bound_preemp++;
+                        } else {
+                            io_bound_preemp++;
+                        }
+                        total_preemptions++;
+                        
+                        // Start context switch
+                        cpu_process = NULL;
+                        cpu_idle_until = current_time + tcs / 2;
+                    } else {
+                        // No preemption, just add to ready queue
+                        if (current_time < 10000) {
+                            printf("time %dms: Process %s completed I/O; added to ready queue ",
+                                current_time, processes[i].id);
+                        }
+                        enqueue_sorted_by_remaining_time(ready_queue, &processes[i], remaining_time);
+                        if (current_time < 10000) {
+                            print_queue(ready_queue);
+                        }
+                    }
+                } else {
+                    // CPU is idle or in context switch, just add to ready queue
                     if (current_time < 10000) {
                         printf("time %dms: Process %s completed I/O; added to ready queue ",
-                              current_time, processes[i].id);
+                            current_time, processes[i].id);
                     }
                     enqueue_sorted_by_remaining_time(ready_queue, &processes[i], remaining_time);
                     if (current_time < 10000) {
@@ -302,9 +314,8 @@ void simulate_srt_actual(Process *processes, int n_processes, int tcs, double la
                     }
                 }
                 
-                remaining_time[i] = processes[i].cpu_bursts[burst_index[i]]; // Reset with actual burst time
+                // Reset I/O completion time
                 io_completion_time[i] = 0;
-                preemption_occurred = 0;
             }
         }
 
