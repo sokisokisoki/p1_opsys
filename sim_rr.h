@@ -223,7 +223,7 @@ void simulate_rr(Process *processes, int n_processes, int tcs, int t_slice, int 
     fprintf(f, "-- CPU utilization: %.3f%%\n", (100.0 * total_burst_time) / current_time);
     fprintf(f, "-- CPU-bound average wait time: %.3f ms\n", cb_count ? cb_wait / cb_count : 0.0);
     fprintf(f, "-- I/O-bound average wait time: %.3f ms\n", io_count ? io_wait / io_count : 0.0);
-    fprintf(f, "-- overall average wait time: %.3f ms\n", n_processes ? (cb_wait + io_wait) / n_processes : 0.0);
+    fprintf(f, "-- overall average wait time: %.3f ms\n", n_processes ? total_waits / n_processes : 0.0);
     fprintf(f, "-- CPU-bound average turnaround time: %.3f ms\n", cb_count ? cb_turn / cb_count : 0.0);
     fprintf(f, "-- I/O-bound average turnaround time: %.3f ms\n", io_count ? io_turn / io_count : 0.0);
     fprintf(f, "-- overall average turnaround time: %.3f ms\n", n_processes ? (cb_turn + io_turn) / n_processes : 0.0);
