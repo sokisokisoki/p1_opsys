@@ -64,7 +64,10 @@ void handleArguments(int argc, char *argv[], int* n_processes, int* n_cpu_proces
     *context_switch_time = atoi(argv[6]);
     *alpha_sjf_srt = atof(argv[7]);
     *time_slice_RR = atoi(argv[8]);
-    *rr_alt = strcmp(argv[9], "RR_ALT") == 0;
+    if (argc == 10) {
+        *rr_alt = strcmp(argv[9], "RR_ALT") == 0;
+    }
+    
 
     // Validate argument constraints
     if (*n_processes <= 0 || *n_cpu_processes < 0 || *n_cpu_processes > *n_processes || *random_seed < 0 ||
@@ -128,9 +131,9 @@ void print_process_details(int n_processes, Process* processes) {
 }
 
 
-void print_sim_conditions(int t_cs, double alpha, int t_slice) {
+void print_sim_conditions(int t_cs, double alpha, int t_slice, int rr_alt) {
     printf("<<< PROJECT SIMULATIONS\n");
-    printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms\n", t_cs, alpha, t_slice);
+    printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms%s\n", t_cs, alpha, t_slice, (rr_alt ? "; RR_ALT" : ""));
 }
 
 
@@ -184,7 +187,7 @@ int main(int argc, char** argv) {
 
     print_process_conditions(n_processes, n_cpu_processes, random_seed, random_lambda, random_ceiling);
     print_process_details(n_processes, processes);
-    print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR);
+    print_sim_conditions(context_switch_time, alpha_sjf_srt, time_slice_RR, rr_alt);
 
     print_sim_stats(n_processes, n_cpu_processes);
 
