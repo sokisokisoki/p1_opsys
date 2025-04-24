@@ -118,8 +118,8 @@ void print_process_conditions(int n, int n_cpu, int seed, double lambda, int bou
 
 void print_process_details(int n_processes, Process* processes) {
     for (int i = 0; i < n_processes; i++) {
-        printf("%s-bound process %s: arrival time %dms; %d CPU bursts:\n", 
-            (processes[i].is_cpu_bound ? "CPU" : "I/O"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts);
+        printf("%s-bound process %s: arrival time %dms; %d CPU burst%s:\n", 
+            (processes[i].is_cpu_bound ? "CPU" : "I/O"), processes[i].id, processes[i].arrival_time, processes[i].num_bursts, (processes[i].num_bursts > 1 ? "s" : ""));
         for (int j = 0; j < processes[i].num_bursts; j++) {
             if (j != processes[i].num_bursts - 1) {
                 printf("==> CPU burst %dms ==> I/O burst %dms\n", processes[i].cpu_bursts[j], processes[i].io_bursts[j]);
@@ -133,7 +133,11 @@ void print_process_details(int n_processes, Process* processes) {
 
 void print_sim_conditions(int t_cs, double alpha, int t_slice, int rr_alt) {
     printf("<<< PROJECT SIMULATIONS\n");
-    printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms%s\n", t_cs, alpha, t_slice, (rr_alt ? "; RR_ALT" : ""));
+    if (alpha < 0) {
+        printf("<<< -- t_cs=%dms; alpha=<n/a>; t_slice=%dms%s\n", t_cs, t_slice, (rr_alt ? "; RR_ALT" : ""));
+    } else {
+        printf("<<< -- t_cs=%dms; alpha=%.2f; t_slice=%dms%s\n", t_cs, alpha, t_slice, (rr_alt ? "; RR_ALT" : ""));
+    }
 }
 
 
