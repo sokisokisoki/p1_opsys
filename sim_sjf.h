@@ -121,7 +121,7 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
         for (int i = 0; i < n_processes; i++) {
             if (processes[i].arrival_time == current_time) {
                 if (current_time < 10000) {
-                    printf("time %dms: Process %s %sarrived; added to ready queue ",
+                    printf("time %dms: Process %s %s arrived; added to ready queue ",
                            current_time, processes[i].id,
                            (alpha == -1) ? "" : format_tau(tau_values[i]));
                 }
@@ -134,7 +134,7 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
         for (int i = 0; i < n_processes; i++) {
             if (io_completion_time[i] == current_time && io_completion_time[i] != 0) {
                 if (current_time < 10000) {
-                    printf("time %dms: Process %s %scompleted I/O; added to ready queue ",
+                    printf("time %dms: Process %s %s completed I/O; added to ready queue ",
                            current_time, processes[i].id,
                            (alpha == -1) ? "" : format_tau(tau_values[i]));
                 }
@@ -150,26 +150,26 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
             int actual_burst = cpu_process->cpu_bursts[burst_index[cpu_process_index]];
             total_burst_time += actual_burst;
 
+            remaining_bursts[cpu_process_index]--;
+            int bursts_left = remaining_bursts[cpu_process_index];
+
+            if (current_time < 10000) {
+                printf("time %dms: Process %s %s completed a CPU burst; %d burst%s to go ",
+                    current_time, cpu_process->id,
+                    (alpha == -1) ? "" : format_tau(tau_values[cpu_process_index]),
+                    bursts_left,
+                    bursts_left == 1 ? "" : "s");
+                print_queue(ready_queue);
+            }
+
             if (alpha != -1) {
                 int old_tau = tau_values[cpu_process_index];
                 tau_values[cpu_process_index] = calculate_tau2(alpha, old_tau, actual_burst);
                 if (current_time < 10000) {
                     printf("time %dms: Recalculated tau for process %s: old tau %dms ==> new tau %dms ",
-                           current_time, cpu_process->id, old_tau, tau_values[cpu_process_index]);
+                        current_time, cpu_process->id, old_tau, tau_values[cpu_process_index]);
                     print_queue(ready_queue);
                 }
-            }
-
-            remaining_bursts[cpu_process_index]--;
-            int bursts_left = remaining_bursts[cpu_process_index];
-
-            if (current_time < 10000) {
-                printf("time %dms: Process %s %scompleted a CPU burst; %d burst%s to go ",
-                       current_time, cpu_process->id,
-                       (alpha == -1) ? "" : format_tau(tau_values[cpu_process_index]),
-                       bursts_left,
-                       bursts_left == 1 ? "" : "s");
-                print_queue(ready_queue);
             }
 
             if (bursts_left > 0) {
@@ -183,10 +183,11 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
                     print_queue(ready_queue);
                 }
             } else {
-                if (current_time < 10000) {
-                    printf("time %dms: Process %s terminated ", current_time, cpu_process->id);
-                    print_queue(ready_queue);
-                }
+
+
+                printf("time %dms: Process %s terminated ", current_time, cpu_process->id);
+                print_queue(ready_queue);
+                
                 turnaround_times[cpu_process_index] = current_time + tcs/2 - processes[cpu_process_index].arrival_time;
                 if (cpu_process->is_cpu_bound) {
                     cb_count++;
@@ -218,7 +219,7 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
             last_completion_time[cpu_process_index] = start_time + burst_time;
 
             if (current_time < 10000) {
-                printf("time %dms: Process %s %sstarted using the CPU for %dms burst ",
+                printf("time %dms: Process %s %s started using the CPU for %dms burst ",
                        start_time, cpu_process->id,
                        (alpha == -1) ? "" : format_tau(tau_values[cpu_process_index]),
                        burst_time);
@@ -233,20 +234,20 @@ void simulate_sjf(Process *processes, int n_processes, int tcs, double alpha, do
         current_time++;
     }
 
-    printf("time %dms: Simulator ended for SJF [Q empty]\n\n", current_time);
+    printf("time %dms: Simulator ended for SJF [Q empty]\n\n", current_time+1);
 
     FILE *f = fopen("simout.txt", "a");
-    for (int i = 0; i < n_processes; i++) {
-        if (processes[i].is_cpu_bound) {
-            cb_count++;
-            cb_wait += wait_times[i];
-            cb_turn += turnaround_times[i];
-        } else {
-            io_count++;
-            io_wait += wait_times[i];
-            io_turn += turnaround_times[i];
-        }
-    }
+    // for (int i = 0; i < n_processes; i++) {
+    //     if (processes[i].is_cpu_bound) {
+    //         cb_count++;
+    //         cb_wait += wait_times[i];
+    //         cb_turn += turnaround_times[i];
+    //     } else {
+    //         io_count++;
+    //         io_wait += wait_times[i];
+    //         io_turn += turnaround_times[i];
+    //     }
+    // }
     
     fprintf(f, "Algorithm SJF\n");
     fprintf(f, "-- CPU utilization: %.3f%%\n", 100.0 * total_burst_time / current_time);

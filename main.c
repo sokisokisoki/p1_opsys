@@ -194,8 +194,10 @@ int main(int argc, char** argv) {
     // simulations:
     simulate_fcfs(processes, n_processes, context_switch_time);
     simulate_sjf(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
-    simulate_srt(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
+    if (alpha_sjf_srt < 0) {
+        simulate_srt_actual(processes, n_processes, context_switch_time, random_lambda);
+    } else {
+        simulate_srt(processes, n_processes, context_switch_time, alpha_sjf_srt, random_lambda);
+    }
     simulate_rr(processes, n_processes, context_switch_time, time_slice_RR, rr_alt);
-
-
 }
